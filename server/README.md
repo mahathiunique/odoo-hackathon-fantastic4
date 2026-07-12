@@ -10,13 +10,24 @@ Backend API foundation for the **AssetFlow — Enterprise Asset & Resource Manag
 
 **Stage 4: Departments and Asset Categories — Implemented**
 
+**Stage 5: Employee Directory — Implemented**
+
 **Stage 7: Asset Allocation and Returns — Implemented**
 
+**Stage 8: Shared Resources and Resource Booking — Implemented (this branch)**
+
 The server now supports JWT authentication, session restoration, admin-only user
-management, password hashing, admin seeding, and protected Department and Asset
-Category APIs. The Stage 7 Asset Allocation module was built independently from
-the Stage 6 Asset management branch and uses a dynamic Mongoose adapter to
-integrate with Asset and AssetHistory once Stage 6 is merged.
+management, password hashing, admin seeding, protected Department and Asset
+Category APIs, the Employee directory, the Stage 7 Asset Allocation module, and the
+Stage 8 Shared Resource and Resource Booking modules (resources, time-slot booking,
+overlap prevention, concurrency-safe booking creation, booking calendar, my bookings,
+and confirm/cancel/complete flows).
+
+Stage 6 (Asset Management) is developed on a separate branch and is not required by
+Stage 8. Resources and bookings run fully standalone. The Stage 7 Allocation module
+was built independently from Stage 6 and uses a dynamic adapter to integrate with
+Asset and AssetHistory once Stage 6 is merged. The backend starts successfully
+without the Asset or AssetAllocation models.
 
 ## Technology stack
 
@@ -263,6 +274,21 @@ URL-encoded (for example `#` becomes `%23`).
 | GET | `http://localhost:5000/api/allocations/:id` | Allocation details |
 | POST | `http://localhost:5000/api/allocations` | Create allocation |
 | PATCH | `http://localhost:5000/api/allocations/:id/return` | Return asset |
+| GET/POST | `http://localhost:5000/api/resources` | List or create shared resources |
+| GET | `http://localhost:5000/api/resources/options` | Active/available resource options |
+| GET/PUT | `http://localhost:5000/api/resources/:id` | Read or update a resource |
+| PATCH | `http://localhost:5000/api/resources/:id/status` | Activate/deactivate a resource |
+| PATCH | `http://localhost:5000/api/resources/:id/availability` | Change availability |
+| DELETE | `http://localhost:5000/api/resources/:id` | Soft-deactivate a resource |
+| GET/POST | `http://localhost:5000/api/bookings` | List all bookings / create a booking |
+| GET | `http://localhost:5000/api/bookings/my` | Current user's bookings |
+| GET | `http://localhost:5000/api/bookings/calendar` | Calendar bookings (max 90-day range) |
+| GET | `http://localhost:5000/api/bookings/stats` | Booking statistics (Admin/Asset Manager) |
+| POST | `http://localhost:5000/api/bookings/check-availability` | Check a time slot |
+| GET | `http://localhost:5000/api/bookings/:id` | Read a booking |
+| PATCH | `http://localhost:5000/api/bookings/:id/confirm` | Confirm a pending booking |
+| PATCH | `http://localhost:5000/api/bookings/:id/cancel` | Cancel a booking |
+| PATCH | `http://localhost:5000/api/bookings/:id/complete` | Complete a booking |
 
 Allowed frontend origin: `http://localhost:5174`
 
@@ -297,6 +323,46 @@ Organization seed (run the Admin seed first):
 ```bash
 npm run seed:organization
 ```
+
+Stage 8 resources and sample bookings seed (run the Admin seed first). This never
+creates Assets and does not require Stage 6 or Stage 7:
+
+```bash
+npm run seed:resources
+```
+
+## Stage 8 — Shared Resources and Booking
+
+Stage 8 is independently functional and never imports the Asset model directly.
+
+### Overlap prevention
+
+A booking blocks a time slot only when its status is `Pending` or `Confirmed`.
+Overlap is detected with the exact rule
+`existing.startTime < new.endTime AND existing.endTime > new.startTime`, so
+boundary-touching bookings (for example 10:00–11:00 and 11:00–12:00) are allowed.
+`Cancelled` and `Completed` bookings never block future slots.
+
+### Concurrency-safe creation
+
+Booking creation and confirmation run inside a MongoDB transaction that first
+`$inc`-s the resource's `bookingVersion`, creating a write dependency on the same
+resource document. Concurrent transactions for the same resource conflict; transient
+transaction errors are retried up to three times, after which overlaps are rechecked.
+This guarantees that two simultaneous requests cannot both book the same slot.
+
+### Optional Asset integration (available after Stage 6)
+
+`integrations/resourceAssetAdapter.js` performs a dynamic `mongoose.model("Asset")`
+lookup. Before Stage 6 is merged:
+
+- Resources can be created, listed, and booked with `linkedAsset = null`.
+- Supplying `linkedAsset` returns HTTP `503` with a clear message instead of crashing.
+
+After Stage 6 is merged, linking validates that the Asset exists, is
+`isSharedResource = true`, and is not `Lost`, `Retired`, or `Disposed`. Bookings are
+rejected when the linked Asset is `Under Maintenance`, `Lost`, `Retired`, or
+`Disposed`. Bookings never modify Asset lifecycle status and never write AssetHistory.
 
 ## Testing instructions
 
