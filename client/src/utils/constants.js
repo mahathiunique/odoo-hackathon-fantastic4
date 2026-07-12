@@ -5,6 +5,7 @@ export const ROLES = [
   "Auditor",
   "Employee",
 ];
+
 export const STATUS = {
   asset: [
     "Available",
@@ -33,6 +34,7 @@ export const STATUS = {
     "Missing",
   ],
 };
+
 export const ROLE_PATHS = {
   Admin: ["*"],
   "Asset Manager": [
@@ -46,6 +48,7 @@ export const ROLE_PATHS = {
     "/bookings",
     "/my-bookings",
     "/notifications",
+    "/activity",
     "/profile",
   ],
   "Maintenance Manager": [
@@ -57,6 +60,7 @@ export const ROLE_PATHS = {
     "/bookings",
     "/maintenance",
     "/notifications",
+    "/activity",
     "/profile",
   ],
   Auditor: [
@@ -68,44 +72,6 @@ export const ROLE_PATHS = {
     "/bookings",
     "/audits",
     "/my-audits",
-    "/notifications",
-    "/profile",
-  ],
-  Admin: ["*"],
-  "Asset Manager": [
-    "/dashboard",
-    "/departments",
-    "/categories",
-    "/employees",
-    "/assets",
-    "/allocations",
-    "/resources",
-    "/bookings",
-    "/my-bookings",
-    "/notifications",
-    "/activity",
-    "/profile",
-  ],
-  "Maintenance Manager": [
-    "/dashboard",
-    "/departments",
-    "/categories",
-    "/assets",
-    "/resources",
-    "/bookings",
-    "/maintenance",
-    "/notifications",
-    "/activity",
-    "/profile",
-  ],
-  Auditor: [
-    "/dashboard",
-    "/departments",
-    "/categories",
-    "/assets",
-    "/resources",
-    "/bookings",
-    "/audits",
     "/notifications",
     "/activity",
     "/profile",
@@ -125,6 +91,7 @@ export const ROLE_PATHS = {
     "/profile",
   ],
 };
+
 export const canAccess = (role, path) =>
   ROLE_PATHS[role]?.includes("*") ||
   ROLE_PATHS[role]?.some((p) => path === p || path.startsWith(`${p}/`));
