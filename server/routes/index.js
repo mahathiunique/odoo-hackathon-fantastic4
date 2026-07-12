@@ -9,6 +9,7 @@ const assetRoutes = require("./assetRoutes");
 const allocationRoutes = require("./allocationRoutes");
 const resourceRoutes = require("./resourceRoutes");
 const bookingRoutes = require("./bookingRoutes");
+const auditRoutes = require("./auditRoutes");
 const maintenanceRoutes = require("./maintenanceRoutes");
 
 const router = express.Router();
@@ -25,6 +26,7 @@ router.use("/allocations", allocationRoutes);
 // Stage 8 — Shared Resources and Resource Booking
 router.use("/resources", resourceRoutes);
 router.use("/bookings", bookingRoutes);
+router.use("/audits", auditRoutes);
 
 // Stage 9 — Maintenance workflow
 router.use("/maintenance", maintenanceRoutes);

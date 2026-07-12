@@ -391,3 +391,115 @@ curl http://localhost:5000/api/unknown
   (`http://localhost:5174`).
 - **Logs showing the connection string** — this should never happen; the server logs
   only the database host and name.
+
+## Stage 10 — Audit Cycles and Asset Discrepancies
+
+Stage 10 is independent of the parallel Stage 9 Maintenance work. It adds immutable
+historical Audit Cycles and Audit Items, atomic `AUD-YYYY-0001` code generation,
+scope snapshots, round-robin Auditor assignment, physical verification, discrepancy
+and missing-asset reporting, progress summaries, completion locking, and statistics.
+
+Endpoints are available below `/api/audits` for listing, planning, starting,
+cancelling, completing, reporting, item assignment, and item verification. Admins
+manage workflows; assigned Auditors verify their items; Asset and Maintenance
+Managers have read-only access. Employees have no organization-wide Audit access.
+
+Seed a Planned Audit after the prerequisite organization, employee, and Asset data:
+
+```bash
+npm run seed:audits
+```
+
+Audit records and items are never permanently deleted. Starting an Audit captures
+expected Asset values so later Department, Category, assignment, location, condition,
+or lifecycle changes do not rewrite historical findings.
+
+### Data models
+
+- **AuditCycle** — the audit plan and lifecycle: `auditName`, server-generated
+  `auditCode`, scope (`departments`, `categories`, `includeUnassignedAssets`),
+  `startDate`/`endDate`, `assignedAuditors`, `status`, workflow metadata
+  (`startedBy`, `completedBy`, `cancelledBy`, `cancelReason`), a `completionOverride`
+  block, a denormalized `summary`, an immutable `scopeSnapshot`, and embedded
+  `unregisteredFindings`.
+- **AuditItem** — one row per in-scope Asset with an immutable `expectedSnapshot`,
+  the recorded actual values (`actualLocation`, `actualDepartment`, `actualEmployee`,
+  `physicalCondition`), `verificationStatus`, `discrepancyTypes`, `auditorNotes`,
+  `assignedAuditor`, `verifiedBy`/`verifiedAt`, and an `isLocked` flag. A unique
+  `(auditCycle, asset)` index prevents duplicate items.
+- **AuditCounter** — an atomic per-year sequence keyed by `{ key: "audit", year }`
+  used to generate unique `AUD-YYYY-NNNN` codes via `findOneAndUpdate` with `$inc`.
+
+### Statuses and enums
+
+- **Audit statuses**: `Planned`, `In Progress`, `Completed`, `Cancelled`.
+- **Verification statuses**: `Pending`, `Verified`, `Discrepancy`, `Missing`.
+- **Discrepancy types**: `Location Mismatch`, `Department Mismatch`,
+  `Employee Mismatch`, `Condition Mismatch`, `Missing Asset`, `Unregistered Asset`,
+  `Other`.
+
+### Scope matching
+
+When an Audit starts, in-scope Assets are resolved from the audit scope: Assets whose
+`department` is in the selected departments, whose `category` is in the selected
+categories, or (when `includeUnassignedAssets` is set) Assets with no department.
+`Disposed` Assets are always excluded; `Retired` and `Under Maintenance` Assets are
+included. Stage 9 is not required to include Under Maintenance Assets.
+
+### Auditor permissions
+
+- **Admin** — full management (create, edit Planned, start, complete, cancel, assign,
+  verify any item, record findings) and read access.
+- **Auditor** — read access to audits they are assigned to, verify only their own
+  assigned items, and record unregistered findings on assigned audits.
+- **Asset Manager / Maintenance Manager** — organization-wide read-only access.
+- **Employee** — no organization-wide Audit access.
+
+### Audit-start transaction
+
+Starting an Audit runs inside a MongoDB transaction: it re-validates the scope,
+generates all Audit Items with expected snapshots, distributes them across the
+assigned auditors using round-robin assignment, and flips the cycle to
+`In Progress`. If any part fails, the whole operation rolls back so no partial Audit
+Items remain. A cycle can only be started from `Planned`, so it cannot start twice.
+
+### Completion override
+
+Completion normally requires every item to be verified. An Admin may explicitly
+override remaining `Pending` items by supplying `overridePendingItems: true` and an
+`overrideReason` (minimum 10 characters). The override flag and reason are preserved
+on the cycle. On completion all Audit Items are locked (`isLocked: true`) and the
+cycle becomes immutable. Cancellation similarly locks and preserves existing items.
+
+### Unregistered findings
+
+An assigned Auditor or an Admin can record a physically present Asset that is not in
+the system. This never creates a real Asset record; it is appended to the cycle's
+`unregisteredFindings`, increments the report's `unregisteredAssetCount`, and appears
+in the structured report.
+
+### Structured report
+
+`GET /api/audits/:id/report` returns a single structured shape shared by the API and
+UI: audit identity/scope, summary totals, completion percentage, and grouped
+sections for missing assets, location/department/employee/condition mismatches,
+damaged or unusable assets, unregistered findings, and pending items.
+
+### Audit seed command
+
+```bash
+npm run seed:audits
+```
+
+The seed loads `server/.env` explicitly so it runs from either the repository root
+or the `server` directory. It requires an existing active Admin, at least one active
+Auditor, and existing Assets, generates codes from the real `AuditCounter`, and
+creates Planned, In Progress, and Completed sample cycles with consistent summaries.
+It is idempotent (existing cycles are skipped), never modifies Asset records, and
+never creates Maintenance records. If no active Auditor exists it prints a clear
+message and exits cleanly.
+
+### Stage 9 independence
+
+The Audit module does not import any Stage 9 Maintenance model, service, controller,
+route, validator, or seed. It compiles and runs without the Maintenance branch.

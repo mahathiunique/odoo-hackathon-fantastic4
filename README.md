@@ -10,10 +10,11 @@ Stage 2: Backend foundation and MongoDB Atlas — Completed
 Stage 3: Authentication and user management — Completed
 Stage 4: Departments and asset categories — Completed
 Stage 5: Employee directory — Completed
-Stage 6: Asset management and lifecycle — In progress on separate branch
-Stage 7: Asset allocation and returns — In progress on separate branch
-Stage 8: Shared resources and booking — In progress on separate branch
-Stage 9: Maintenance workflow — Pending
+Stage 6: Asset management and lifecycle — Completed
+Stage 7: Asset allocation and returns — Completed
+Stage 8: Shared resources and booking — Completed
+Stage 9: Maintenance workflow — In progress on separate branch
+Stage 10: Audit cycle and discrepancies — Completed on this branch
 ```
 
 Stage 8 operates independently using standalone shared resources. Resources and

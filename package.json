@@ -15,6 +15,7 @@
     "test:server": "npm test --workspace=server",
     "seed:admin": "npm run seed:admin --workspace=server",
     "seed:organization": "npm run seed:organization --workspace=server",
-    "seed:allocations": "npm run seed:allocations --workspace=server"
+    "seed:allocations": "npm run seed:allocations --workspace=server",
+    "seed:audits": "npm run seed:audits --workspace=server"
   }
 }

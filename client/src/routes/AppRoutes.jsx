@@ -31,7 +31,12 @@ import BookingFormPage from '../pages/bookings/BookingFormPage';
 import BookingDetailsPage from '../pages/bookings/BookingDetailsPage';
 import BookingCalendarPage from '../pages/bookings/BookingCalendarPage';
 import MyBookingsPage from '../pages/bookings/MyBookingsPage';
-import {employeeService,assetService,allocationService,resourceService,bookingService,maintenanceService,auditService} from '../services/entityServices';
+import {employeeService,assetService,allocationService,resourceService,bookingService,maintenanceService} from '../services/entityServices';
+import AuditListPage from '../pages/audits/AuditListPage';
+import AuditFormPage from '../pages/audits/AuditFormPage';
+import AuditDetailsPage from '../pages/audits/AuditDetailsPage';
+import AuditReportPage from '../pages/audits/AuditReportPage';
+import MyAuditsPage from '../pages/audits/MyAuditsPage';
 import {userService} from '../services/userService';
 import departmentService from '../services/departmentService';
 import categoryService from '../services/categoryService';
@@ -47,7 +52,6 @@ const configs={
   employees:{title:'Employees',single:'Employee',description:'People directory and asset ownership context.',base:'/employees',service:employeeService,columns:[{key:'employeeId',label:'Employee ID'},{key:'name',label:'Name'},{key:'email',label:'Email'},{key:'designation',label:'Designation'},{key:'department',label:'Department'},badge('status')],fields:[['employeeId','Employee ID',1],['name','Full name',1],['email','Email',1,'email',null,emailPattern],['phone','Phone number'],['designation','Designation',1],['department','Department',1,'select',['Engineering','Finance','Operations','Facilities','People & Culture']],['joiningDate','Joining date',1,'date'],['status','Status',1,'select',['Active','Inactive']]]},
   assets:{title:'Assets',single:'Asset',description:'Track ownership, condition, assignment and lifecycle.',base:'/assets',service:assetService,columns:[{key:'assetTag',label:'Asset tag'},{key:'name',label:'Asset name'},{key:'category',label:'Category',render:v=>v?.name||'—'},{key:'department',label:'Department',render:v=>v?.name||'—'},{key:'assignedToEmployee',label:'Assigned to',render:v=>v?.name||'—'},{key:'currentLocation',label:'Location'},badge('condition'),badge('lifecycleStatus')],statusKey:'lifecycleStatus',fields:[['assetTag','Asset tag',1],['name','Asset name',1],['category','Category',1,'select',['Laptops','Monitors','Mobile Devices','Office Furniture','Network Equipment','Audio Visual','Vehicles','Tools & Equipment']],['serialNumber','Serial number',1],['manufacturer','Manufacturer'],['model','Model'],['department','Department',1,'select',['Engineering','Finance','Operations','Facilities','People & Culture']],['currentLocation','Current location',1],['condition','Condition',1,'select',['Excellent','Good','Fair','Damaged','Unusable']],['lifecycleStatus','Lifecycle status',1,'select',['Available','Reserved','Allocated','Under Maintenance','Lost','Retired','Disposed']],['purchaseDate','Purchase date',0,'date'],['warrantyExpiry','Warranty expiry',0,'date'],['description','Description',0,'textarea'],['notes','Notes',0,'textarea']]},
   maintenance:{title:'Maintenance requests',single:'Maintenance request',description:'Prioritize, approve and resolve asset issues.',base:'/maintenance',service:maintenanceService,columns:[{key:'requestNumber',label:'Request'},{key:'asset',label:'Asset'},{key:'issueTitle',label:'Issue'},badge('priority'),badge('requestStatus'),{key:'scheduledDate',label:'Scheduled'}],statusKey:'requestStatus',fields:[['asset','Asset',1,'select',['Dell Latitude 7440','MacBook Pro 14','ThinkPad X1 Carbon','Samsung ViewFinity S6']],['issueTitle','Issue title',1],['priority','Priority',1,'select',['Low','Medium','High','Critical']],['scheduledDate','Preferred date',0,'date'],['issueDescription','Issue description',1,'textarea']]},
-  audits:{title:'Audit cycles',single:'Audit cycle',description:'Verify physical inventory and resolve discrepancies.',base:'/audits',service:auditService,columns:[{key:'auditCode',label:'Code'},{key:'auditName',label:'Audit cycle'},{key:'departments',label:'Scope'},{key:'startDate',label:'Starts'},{key:'endDate',label:'Ends'},{key:'verifiedAssets',label:'Verified'},badge('status')],fields:[['auditName','Audit name',1],['auditCode','Audit code',1],['departments','Departments',1],['categories','Categories'],['startDate','Start date',1,'date'],['endDate','End date',1,'date'],['assignedAuditors','Assigned auditors',1],['description','Description',0,'textarea']]},
   users:{title:'Users',single:'User',description:'Administer application roles and linked employee access.',base:'/users',service:userService,columns:[{key:'name',label:'Name'},{key:'email',label:'Email'},{key:'role',label:'Role'},{key:'status',label:'Status',render:v=><StatusBadge status={v}/>},{key:'lastLogin',label:'Last login',render:v=>v?new Date(v).toLocaleString():'Never'},{key:'createdAt',label:'Created',render:v=>new Date(v).toLocaleDateString()}],fields:[['name','Name',1],['email','Email',1,'email',null,emailPattern],['role','Role',1,'select',['Admin','Asset Manager','Maintenance Manager','Auditor','Employee']],['phone','Phone'],['status','Status',1,'select',['Active','Inactive']]]}
 };
 for(const c of Object.values(configs))c.fields=c.fields.map(([name,label,required,type,options,pattern])=>({name,label,required,type,options,pattern}));
@@ -81,6 +85,15 @@ export default function AppRoutes(){
           <Route path="new" element={<RoleGuard allowedRoles={['Admin','Asset Manager']}><CategoryFormPage/></RoleGuard>}/>
           <Route path=":id/edit" element={<RoleGuard allowedRoles={['Admin','Asset Manager']}><CategoryFormPage/></RoleGuard>}/>
         </Route>
+
+        <Route path="audits">
+          <Route index element={<RoleGuard allowedRoles={['Admin','Auditor','Asset Manager','Maintenance Manager']}><AuditListPage/></RoleGuard>}/>
+          <Route path="new" element={<RoleGuard allowedRoles={['Admin']}><AuditFormPage/></RoleGuard>}/>
+          <Route path=":id" element={<RoleGuard allowedRoles={['Admin','Auditor','Asset Manager','Maintenance Manager']}><AuditDetailsPage/></RoleGuard>}/>
+          <Route path=":id/edit" element={<RoleGuard allowedRoles={['Admin']}><AuditFormPage/></RoleGuard>}/>
+          <Route path=":id/report" element={<RoleGuard allowedRoles={['Admin','Auditor','Asset Manager','Maintenance Manager']}><AuditReportPage/></RoleGuard>}/>
+        </Route>
+        <Route path="my-audits" element={<RoleGuard allowedRoles={['Admin','Auditor']}><MyAuditsPage/></RoleGuard>}/>
 
         {Object.entries(configs).map(([k,c])=>(
           <Route key={k} path={c.base.slice(1)}>
