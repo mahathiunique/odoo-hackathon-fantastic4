@@ -1,117 +1,401 @@
-# AssetFlow
+# 🏢 AssetFlow | Enterprise Asset & Resource Management System
 
-**Enterprise Asset & Resource Management System** — a responsive ERP-style workspace that helps organizations understand what they own, where it is, who holds it, and what operational action is due next.
+AssetFlow is a hackathon-built ERP platform that helps organizations digitally manage physical assets, employees, shared resources, maintenance, audits, allocations, bookings, and operational notifications through one centralized system.
 
-## Development roadmap
+It is designed for organizations such as:
+
+- Colleges and schools
+- Offices and companies
+- Hospitals
+- Factories
+- Government departments
+- NGOs
+- Training centres
+
+---
+
+## 🚨 The Problem
+
+Many organizations still manage assets using:
+
+- Paper registers
+- Excel sheets
+- WhatsApp messages
+- Separate booking forms
+- Manual maintenance records
+- Physical audit reports
+
+This creates several critical operational problems:
+
+- Assets can be allocated to multiple people accidentally.
+- Organizations cannot easily identify who holds an asset.
+- Asset returns become overdue without reminders.
+- Shared rooms, vehicles, and equipment may be double-booked.
+- Maintenance begins without proper approval.
+- Missing or damaged assets are discovered very late.
+- Audit discrepancies are difficult to track.
+- Management lacks real-time visibility.
+
+**The ERP Gap:** Existing ERP platforms are often expensive, complex, and designed for large organizations with accounting and purchasing modules that smaller organizations may not require.
+
+---
+
+## 💡 Our Solution
+
+AssetFlow provides a simple, centralized, and role-based platform for managing the complete lifecycle of organizational assets and shared resources.
+
+The system allows organizations to:
+
+- Register departments and asset categories
+- Maintain an Employee Directory
+- Register and track assets
+- Allocate assets to employees or departments
+- Prevent double allocation
+- Track return dates and overdue assets
+- Manage shared resources
+- Prevent overlapping bookings
+- Handle maintenance approval workflows
+- Conduct physical asset audits
+- Record missing and mismatched assets
+- Generate in-app notifications
+- View real-time dashboard statistics
+- Maintain a complete operational Activity Log
+
+---
+
+## 🏗️ System Architecture
+
+![System Architecture](./assets/architecture-diagram.jpeg)
+
+---
+
+## 🔥 What Makes AssetFlow Unique?
+
+### One Platform for the Full Asset Journey
+
+Most simple asset systems stop right after asset registration. AssetFlow handles the entire continuous lifecycle chain:
+
+$$\text{Registration} \longrightarrow \text{Allocation} \longrightarrow \text{Usage} \longrightarrow \text{Return} \longrightarrow \text{Maintenance} \longrightarrow \text{Audit} \longrightarrow \text{Retirement} \longrightarrow \text{Disposal}$$
+
+### Allocation and Booking Are Separate
+
+AssetFlow understands that an asset allocation and a resource booking are functionally different:
+
+- A laptop may be allocated to an Employee for months.
+- A meeting room may be booked for one hour.
+- A vehicle may function as a shared resource.
+- A projector may be allocated or booked depending on the use case.
+
+### Database-Level Conflict Prevention
+
+The system does not depend only on frontend validation. It implements robust backend and database protection layers to prevent:
+
+- Double asset allocation
+- Duplicate open maintenance requests
+- Duplicate audit items
+- Overlapping resource bookings
+- Duplicate notifications
+- Duplicate generated reference numbers
+
+### Maintenance Is Connected to Asset Lifecycle
+
+Maintenance is not stored as an isolated record. When maintenance starts, the asset flips to `Under Maintenance`, and any linked resource is set to `Unavailable`. When maintenance completes, the asset is returned to `Available` or `Retired`, updating the resource availability dynamically.
+
+### Audits Use Historical Snapshots
+
+When an audit cycle starts, asset information is captured as an expected state snapshot. Auditors compare the physical asset against that specific snapshot, allowing the system to flag location, department, employee, or condition mismatches, along with missing and completely unregistered assets.
+
+### Role-Specific Experience
+
+Each user sees only what is relevant to their responsibility across five roles: Admin, Asset Manager, Maintenance Manager, Auditor, and Employee. Both frontend visibility and backend API permissions are strictly enforced.
+
+### Designed for Smaller Organizations
+
+AssetFlow focuses strictly on asset and resource operations without forcing organizations to adopt bloated accounting, invoicing, purchasing, or payroll modules. This keeps configuration lightweight and intuitive.
+
+---
+
+## ⚙️ Detailed Implementation Breakdown
+
+### 🔐 Authentication and Role Management
+
+- Secure JWT authentication with password hashing (`bcryptjs`).
+- User activation and deactivation toggles.
+- Role-based frontend access controls alongside role-based backend authorization middleware.
+- Persistent login sessions.
+- Comprehensive user management controlled exclusively by the Admin role.
+
+### 🏢 Organization Setup
+
+- **Department Management:** Full hierarchy mapping.
+- **Asset-Category Management:** Grouping by electronics, furniture, vehicles, etc.
+- **Employee Directory:** Full profile tracking and employee-to-user account linking.
+- **Data Handling:** Global implementations of search, filters, sorting, and pagination across views.
+
+### 📦 Asset Lifecycle Management
+
+Assets are monitored through strict, validated transitional loops:
+
+- `Available` $\rightarrow$ `Reserved` $\rightarrow$ `Allocated` $\rightarrow$ `Available`
+- `Available` $\rightarrow$ `Under Maintenance` $\rightarrow$ `Available` or `Retired`
+- `Available` $\rightarrow$ `Lost` $\rightarrow$ `Available` or `Retired`
+- `Retired` $\rightarrow$ `Disposed`
+- Stores complete historical logs of all state updates per asset.
+
+### 🔄 Asset Allocation and Returns
+
+- Allocation options to individual employees or entire departments.
+- Strict logic to prevent double allocation.
+- Captures purpose definitions and expected return dates.
+- Automated detection and highlighting of overdue allocations.
+- Logs actual return dates and meticulous condition check-in notes.
+
+### 📅 Shared Resources and Booking
+
+Applies to conference rooms, training halls, vehicles, projectors, equipment, and shared workspaces:
+
+- Resource registration with explicit capacity and location management.
+- Live availability tracking.
+- Time-slot booking via an interactive frontend calendar view.
+- Booking workflows supporting creation, approval, cancellation, and completion.
+- Strict mathematical validation preventing overlapping booking slots.
+- Personalized "My Bookings" management page for standard employees.
+
+### 🛠️ Maintenance Workflow
+
+The core ticket lifecycle runs through: `Submitted` $\rightarrow$ `Approved` $\rightarrow$ `Technician Assigned` $\rightarrow$ `In Progress` $\rightarrow$ `Completed`.
+
+- Alternative outcomes handle `Submitted` $\rightarrow$ `Rejected` or cancellation branches.
+- Allows tracking of issue prioritization and maintenance costs.
+- Locks assets from starting maintenance if currently allocated.
+- Forces dynamic asset status flips and captures post-repair condition updates.
+
+### 📋 Audit Management
+
+The structural cycle follows: `Create Audit` $\rightarrow$ `Select Scope` $\rightarrow$ `Assign Auditors` $\rightarrow$ `Start Audit` $\rightarrow$ `Generate Items` $\rightarrow$ `Verify` $\rightarrow$ `Record Discrepancies` $\rightarrow$ `Complete Audit` $\rightarrow$ `Report`.
+
+- Scope filtering by specific department or category.
+- Automatic item generation utilizing the operational database snapshot.
+- Tracks audit completion percentages and delivers structured discrepancy profiles.
+
+### 🔔 Notifications & Activity Logs
+
+- **In-App Alerts:** Covers overdue asset returns, upcoming return dates, booking confirmations/reminders/cancellations, maintenance updates, and audit assignments.
+- **Notification Engine Features:** Handles read/unread states, priority tracking, deep-linking navigation to related records, and structural deduplication.
+- **Activity Logs:** Immutably writes logs for entries like user logins, asset updates, allocations, bookings, and audit actions to maintain perfect accountability.
+
+### 📊 Dashboard
+
+Fueled by aggregate live queries against MongoDB Atlas:
+
+- **KPI Tracking:** System counts for total, available, allocated, under-maintenance, and lost assets, alongside active employee and resource tracking.
+- **Charts Layer:** Visualized representations of asset lifecycles, categories, departments, and condition frequencies via Recharts.
+- **Feeds:** Streamed list of recent activity logs and context-aware profiles for logged-in employees.
+
+---
+
+## 🔄 Complete System Workflow
+
+$$\text{Organization Setup} \longrightarrow \text{Create Departments \& Categories} \longrightarrow \text{Register Employees \& Users}$$
+
+$$\downarrow}$$
+
+$$\text{Register Assets} \longrightarrow \text{Allocate Assets OR Configure Shared Resources} \longrightarrow \text{Track Returns \& Resource Bookings}$$
+
+$$\downarrow}$$
+
+$$\text{Handle Maintenance Requests} \longrightarrow \text{Conduct Physical Audits} \longrightarrow \text{Generate Notifications \& Activity Logs}$$
+
+$$\downarrow}$$
+
+$$\text{Monitor Everything Through the Dashboard}$$
+
+---
+
+## 👥 User Roles Matrix
+
+### 🛠️ Admin
+
+- Manage Users, Departments, Categories, Employees, and Assets.
+- Manage systemic Allocations, Resources, and Bookings.
+- Approve Maintenance workflows, initiate/complete Audits, and view the global Dashboard and Activity Logs.
+
+### 📦 Asset Manager
+
+- Manage Categories, Employees, Resources, and Bookings.
+- Register, edit, allocate, and process returns for Assets.
+- Access centralized Maintenance and Audit information.
+
+### 🔧 Maintenance Manager
+
+- View Assets and review incoming Maintenance Requests.
+- Approve/reject requests, assign technicians, track maintenance states, and view structural Resource/Audit parameters.
+
+### 🔍 Auditor
+
+- View assigned Audit Cycles, physically verify items, and record discrepancies or missing states.
+- Log newly discovered unregistered findings and view final Audit evaluation reports and system Activity Logs.
+
+### 👥 Employee
+
+- View personal profiles, assigned assets, expected return dates, and custom dashboards.
+- Book shared resources, track personal upcoming slots, and submit/monitor asset maintenance tickets.
+
+---
+
+## 💻 Technology Stack
+
+### Frontend
+
+- React, Vite, JavaScript
+- Tailwind CSS, React Router, Axios
+- React Hook Form, Recharts, Lucide React, date-fns
+
+### Backend
+
+- Node.js, Express.js
+- MongoDB Atlas, Mongoose ORM
+- JSON Web Token, bcryptjs, express-validator
+- Helmet, CORS, Express Rate Limit
+
+---
+
+## 📂 Project Structure
 
 ```text
-Stage 1: Frontend and mock data — Completed
-Stage 2: Backend foundation and MongoDB Atlas — Completed
-Stage 3: Authentication and user management — Completed
-Stage 4: Departments and asset categories — Completed
-Stage 5: Employee directory — Completed
-Stage 6: Asset management and lifecycle — Completed
-Stage 7: Asset allocation and returns — Completed
-Stage 8: Shared resources and booking — Completed
-Stage 9: Maintenance workflow — In progress on separate branch
-Stage 10: Audit cycle and discrepancies — Completed on this branch
-Stage 6: Asset management and lifecycle — In progress on separate branch
-Stage 7: Asset allocation and returns — In progress on separate branch
-Stage 8: Shared resources and booking — Completed
-Stage 9: Maintenance request and approval workflow — In progress on separate branch
-Stage 10: Audit cycle and discrepancy management — In progress on separate branch
-Stage 11: Notifications, activity logs and dashboard APIs — Completed
+AssetFlow/
+├── client/
+│   ├── src/
+│   │   ├── components/
+│   │   ├── context/
+│   │   ├── layout/
+│   │   ├── pages/
+│   │   ├── routes/
+│   │   ├── services/
+│   │   └── utils/
+│   └── package.json
+│
+├── server/
+│   ├── config/
+│   ├── controllers/
+│   ├── integrations/
+│   ├── middleware/
+│   ├── models/
+│   ├── routes/
+│   ├── seed/
+│   ├── services/
+│   ├── tests/
+│   ├── validators/
+│   └── package.json
+│
+└── README.md
+
 ```
 
-Stage 8 operates independently using standalone shared resources. Resources and
-bookings do not require the Stage 6 Asset module; a resource may optionally be
-linked to an Asset only after Stage 6 is merged (see `server/README.md`).
+---
 
-## URLs
+## 🚀 Local Setup & Installation
 
-```text
-Frontend:    http://localhost:5174
-Backend:     http://localhost:5000
-Health check: http://localhost:5000/api/health
+### Backend Configuration
+
+Create a `server/.env` file and populate:
+
+```env
+PORT=5000
+NODE_ENV=development
+MONGODB_URI=YOUR_MONGODB_ATLAS_CONNECTION_STRING
+CLIENT_URL=http://localhost:5174
+API_PREFIX=/api
+
+JWT_SECRET=YOUR_LONG_RANDOM_SECRET
+JWT_EXPIRES_IN=7d
+BCRYPT_SALT_ROUNDS=12
+
+ADMIN_NAME=AssetFlow Admin
+ADMIN_EMAIL=admin@assetflow.com
+ADMIN_PASSWORD=Admin@123
+
 ```
 
-Departments and categories use real APIs. Other feature modules continue using mock data until their backend stages.
+### Frontend Configuration
 
-## Technology
+Create a `client/.env` file and populate:
 
-- Frontend: React, Vite, JavaScript, Tailwind CSS, React Router, React Hook Form, Axios, Lucide, Recharts, React Hot Toast, and date-fns.
-- Backend: Node.js, Express, MongoDB Atlas, Mongoose, dotenv, cors, helmet, morgan, express-rate-limit.
+```env
+VITE_API_BASE_URL=http://localhost:5000/api
+VITE_USE_MOCK_DATA=false
 
-## Frontend
+```
 
-The frontend uses real JWT authentication, user-management, Department, Asset
-Category, Notification, Activity Log and Dashboard APIs. Later business modules
-(assets, allocations, resources, bookings, maintenance, audits) continue using
-mock services and browser `localStorage` until their backend stages are
-implemented.
-
-### Run the frontend
+### Running the System
 
 ```bash
-cd client
-npm install
-npm run dev
+# Install dependencies
+cd server && npm install
+cd ../client && npm install
+
+# Run Backend (Terminal 1)
+cd server && npm run dev
+
+# Run Frontend (Terminal 2)
+cd client && npm run dev
+
 ```
 
-The development server uses `http://localhost:5174` by default.
+### 🗄️ Database Seed Order
 
-## Backend (Stages 2–4)
-
-The backend is now an Express + MongoDB Atlas foundation. It provides a health-check
-endpoint, centralized responses, centralized error handling, request logging, rate
-limiting, CORS for the frontend, and graceful shutdown. It also provides JWT
-authentication, user management, Department and Asset Category models, validation,
-protected CRUD routes, server-side search, filters, sorting, pagination, options
-endpoints, and soft deactivation.
-
-### Run the backend
-
-```bash
-cd server
-npm install
-npm run dev
-```
-
-Then open `http://localhost:5000/api/health`.
-
-### Seed initial data
+Run the seed scripts in the `server` directory sequentially to prep the app for demonstration:
 
 ```bash
 npm run seed:admin
 npm run seed:organization
+npm run seed:employees
+npm run seed:assets
+npm run seed:allocations
 npm run seed:resources
-npm run seed:notifications
+npm run seed:maintenance
+npm run seed:audits
+npm run seed:stage11
+
 ```
 
-`npm run seed:resources` seeds Stage 8 shared resources and a few non-overlapping
-sample bookings. It never creates Assets and does not require Stage 6 or Stage 7.
+- **Demo Login:** `admin@assetflow.com` / `Admin@123`
 
-## MongoDB Atlas
+---
 
-The backend connects to MongoDB Atlas using `MONGODB_URI` from `server/.env`.
-See `server/README.md` for full setup instructions. The `.env` file is never committed.
+## 🤝 Team Contributions & Approach
 
-## Demo credentials
+### Work Breakdown
 
-| Role                | Email                     | Password        |
-| ------------------- | ------------------------- | --------------- |
-| Admin               | admin@assetflow.com       | Admin@123       |
-| Asset Manager       | assets@assetflow.com      | Asset@123       |
-| Maintenance Manager | maintenance@assetflow.com | Maintenance@123 |
-| Auditor             | auditor@assetflow.com     | Auditor@123     |
-| Employee            | employee@assetflow.com    | Employee@123    |
+- **Sriram (Core Platform & Asset Management):** Architecture design, MongoDB Atlas integration, JWT Auth/RBAC, Department/Category configurations, and asset lifecycle state transition tracking.
+- **Tejas (Employee, Allocation & Resource Management):** Directory structures, Employee-to-User binding engines, asset allocations/returns logic, allocation checking, and the calendar-based resource overlap prevention matrix.
+- **Shubham (Maintenance & Audit Workflows):** Maintenance ticketing pipelines, technician deployment rules, asset-resource syncing, Audit cycle infrastructure, dynamic baseline snapshots, and physical mismatch diagnostic tracking.
+- **Mahati (Notifications, Dashboard & UX):** Notification generation and deduplication engines, unified system Activity logs, real-time analytics aggregation, responsive frontend layout routing, and data visualization.
 
-The seeded Admin credentials come from `server/.env`. Change all demonstration
-credentials before using the application outside local development.
+### Hackathon Development Approach
 
-## Known limitations
+The engineering plan split the project into cleanly separated modules bounded by common API contracts and shared database models, allowing parallel execution across distinct branches:
 
-- Modules after Stage 4 still belong to the current browser; they do not synchronize across devices.
-- Backend middleware is the authorization boundary; frontend role guards only control visibility.
-- Concurrent booking and double-allocation checks will ultimately require authoritative backend transactions.
-- Self-service password changes and persistent file uploads remain deferred.
+$$\text{Core Organization Setup} \longrightarrow \text{Assets \& Employees} \longrightarrow \text{Allocations \& Bookings} \longrightarrow \text{Maintenance \& Audits} \longrightarrow \text{Notifications, Dashboard \& Integration}$$
+
+---
+
+## 📈 Impact & Future Enhancements
+
+### Measurable Value
+
+- Reduces organizational asset losses and prevents dual booking overlap constraints.
+- Speeds up maintenance turnaround cycles through systematic manager handoffs.
+- Protects data integrity by eliminating fragile spreadsheet methodologies.
+
+### Future Scope Considerations
+
+- QR-code/barcode hardware scanning and mobile physical verification portals.
+- Cloud storage integration for invoices and asset warranty tracking papers.
+- Real-time event sync using WebSockets alongside advanced asset depreciation math.
+
+---
+
+```
+
+```
