@@ -9,6 +9,10 @@ Stage 1: Frontend and mock data — Completed
 Stage 2: Backend foundation and MongoDB Atlas — Completed
 Stage 3: Authentication and user management — Completed
 Stage 4: Departments and asset categories — Completed
+Stage 5: Employee directory — Completed
+Stage 6: Asset management and lifecycle — In progress on separate branch
+Stage 7: Asset allocation and returns — In progress on separate branch
+Stage 8: Shared resources and booking — Pending
 ```
 
 ## URLs

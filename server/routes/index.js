@@ -6,6 +6,7 @@ const departmentRoutes = require("./departmentRoutes");
 const categoryRoutes = require("./categoryRoutes");
 const employeeRoutes = require("./employeeRoutes");
 const assetRoutes = require("./assetRoutes");
+const allocationRoutes = require("./allocationRoutes");
 
 const router = express.Router();
 
@@ -16,5 +17,6 @@ router.use("/departments", departmentRoutes);
 router.use("/categories", categoryRoutes);
 router.use("/employees", employeeRoutes);
 router.use("/assets", assetRoutes);
+router.use("/allocations", allocationRoutes);
 
 module.exports = router;

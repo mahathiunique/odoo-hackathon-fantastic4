@@ -10,10 +10,13 @@ Backend API foundation for the **AssetFlow — Enterprise Asset & Resource Manag
 
 **Stage 4: Departments and Asset Categories — Implemented**
 
+**Stage 7: Asset Allocation and Returns — Implemented**
+
 The server now supports JWT authentication, session restoration, admin-only user
 management, password hashing, admin seeding, and protected Department and Asset
-Category APIs. Employees, assets, allocations, bookings, maintenance, audits,
-notifications, and dashboard APIs remain outside the current backend stages.
+Category APIs. The Stage 7 Asset Allocation module was built independently from
+the Stage 6 Asset management branch and uses a dynamic Mongoose adapter to
+integrate with Asset and AssetHistory once Stage 6 is merged.
 
 ## Technology stack
 
@@ -27,6 +30,117 @@ notifications, and dashboard APIs remain outside the current backend stages.
 - morgan
 - express-rate-limit
 - nodemon (development)
+
+## Stage 7 Parallel Development
+
+Stage 7 was built independently from Stage 6. The Allocation module does not
+define the Asset schema or AssetHistory schema. Instead it uses a dynamic
+integration adapter that looks up `mongoose.model("Asset")` and
+`mongoose.model("AssetHistory")` at runtime.
+
+Key points:
+- The backend starts successfully even when Stage 6 models are unavailable.
+- Allocation operations return HTTP 503 with a readable message only when they
+  need the missing Asset module.
+- The adapter uses conditional updates and MongoDB transactions to keep Asset
+  lifecycle state and Allocation records consistent.
+- A partial unique index on `AssetAllocation` prevents double allocation of the
+  same asset.
+- All open allocations are preserved; allocations are never permanently deleted.
+
+### Required Asset fields (Stage 6 integration contract)
+
+```text
+_id
+assetTag
+name
+category
+department
+condition
+lifecycleStatus
+currentLocation
+assignedToEmployee
+assignedToDepartment
+expectedReturnDate
+isSharedResource
+updatedBy
+```
+
+### Expected lifecycle values
+
+```text
+Available
+Reserved
+Allocated
+Under Maintenance
+Lost
+Retired
+Disposed
+```
+
+### Expected AssetHistory model
+
+```text
+asset
+previousStatus
+newStatus
+action
+reason
+changes
+performedBy
+metadata
+```
+
+### Allocation API endpoints
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/allocations` | List all allocations (Admin, Asset Manager, Maintenance Manager, Auditor) |
+| GET | `/api/allocations/my` | Current employee's allocations (Employee) |
+| GET | `/api/allocations/overdue` | Overdue allocations (Admin, Asset Manager, Auditor) |
+| GET | `/api/allocations/stats` | Allocation statistics (Admin, Asset Manager) |
+| GET | `/api/allocations/:id` | Allocation details (Admin, Asset Manager, Maintenance Manager, Auditor) |
+| POST | `/api/allocations` | Create allocation (Admin, Asset Manager) |
+| PATCH | `/api/allocations/:id/return` | Return asset (Admin, Asset Manager) |
+
+### Roles and permissions
+
+| Role | Allocations list | Create | Return | Overdue | Stats | My allocations |
+|---|---|---|---|---|---|---|
+| Admin | Yes | Yes | Yes | Yes | Yes | Yes |
+| Asset Manager | Yes | Yes | Yes | Yes | Yes | Yes |
+| Maintenance Manager | Read | No | No | No | No | No |
+| Auditor | Read | No | No | Yes | No | No |
+| Employee | No | No | No | No | No | Yes |
+
+### Integration checklist after Stage 6 merge
+
+1. Merge the Stage 6 branch.
+2. Confirm `mongoose.model("Asset")` is registered.
+3. Confirm `mongoose.model("AssetHistory")` is registered.
+4. Confirm `/api/assets/options?availableOnly=true` works.
+5. Confirm Asset fields match the Stage 7 integration contract.
+6. Start the backend.
+7. Test allocation creation.
+8. Confirm Asset status changes to Allocated.
+9. Confirm assignment fields are populated.
+10. Confirm AssetHistory record is created.
+11. Test Asset return.
+12. Confirm Asset status changes to Available.
+13. Confirm assignment fields are cleared.
+14. Confirm the open-allocation unique index works.
+15. Run `npm run seed:allocations`.
+16. Run frontend production build.
+
+### Seed order after merge
+
+```bash
+npm run seed:admin
+npm run seed:organization
+npm run seed:employees
+npm run seed:assets
+npm run seed:allocations
+```
 
 ## Folder structure
 
@@ -142,6 +256,13 @@ URL-encoded (for example `#` becomes `%23`).
 | GET | `http://localhost:5000/api/categories/options` | Active category options |
 | GET/PUT | `http://localhost:5000/api/categories/:id` | Read or update a category |
 | PATCH | `http://localhost:5000/api/categories/:id/status` | Change category status |
+| GET | `http://localhost:5000/api/allocations` | List allocations |
+| GET | `http://localhost:5000/api/allocations/my` | Current employee allocations |
+| GET | `http://localhost:5000/api/allocations/overdue` | Overdue allocations |
+| GET | `http://localhost:5000/api/allocations/stats` | Allocation statistics |
+| GET | `http://localhost:5000/api/allocations/:id` | Allocation details |
+| POST | `http://localhost:5000/api/allocations` | Create allocation |
+| PATCH | `http://localhost:5000/api/allocations/:id/return` | Return asset |
 
 Allowed frontend origin: `http://localhost:5174`
 

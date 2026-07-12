@@ -9,7 +9,8 @@
     "check": "node --check server.js && node --check app.js",
     "test": "node --test tests/*.test.js",
     "seed:admin": "node seed/seedAdmin.js",
-    "seed:organization": "node seed/seedOrganization.js"
+    "seed:organization": "node seed/seedOrganization.js",
+    "seed:allocations": "node seed/seedAllocations.js"
   },
   "keywords": [
     "assetflow",
