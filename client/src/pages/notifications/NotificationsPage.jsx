@@ -1,1 +1,53 @@
-import PageHeader from '../../components/layout/PageHeader';import useNotifications from '../../hooks/useNotifications';import StatusBadge from '../../components/common/StatusBadge';export default function NotificationsPage(){const {items,markRead,markAll,unread}=useNotifications();return <><PageHeader title="Notifications" description={`${unread} unread notifications`} action={<button className="btn-secondary" onClick={markAll}>Mark all as read</button>}/><div className="overflow-hidden rounded-xl border bg-white shadow-card">{items.map(x=><button key={x.id} onClick={()=>markRead(x.id)} className={`flex w-full items-start gap-4 border-b p-5 text-left hover:bg-slate-50 ${!x.read?'bg-indigo-50/50':''}`}><span className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${x.read?'bg-slate-200':'bg-primary-500'}`}/><div className="flex-1"><div className="flex flex-wrap justify-between gap-2"><b className="text-sm text-slate-900">{x.title}</b><StatusBadge status={x.type}/></div><p className="mt-1 text-sm text-slate-600">{x.message}</p><time className="mt-2 block text-xs text-slate-400">{new Date(x.date).toLocaleString()}</time></div></button>)}</div></>}
+import { Bell, CheckCheck, RefreshCw } from 'lucide-react';
+import PageHeader from '../../components/layout/PageHeader';
+import useNotifications from '../../hooks/useNotifications';
+import NotificationItem from '../../components/notifications/NotificationItem';
+import EmptyState from '../../components/common/EmptyState';
+import LoadingSkeleton from '../../components/common/LoadingSkeleton';
+
+export default function NotificationsPage() {
+  const { items, unread, loading, markRead, markAll, refresh } = useNotifications();
+
+  return (
+    <>
+      <PageHeader
+        title="Notifications"
+        description={`${unread} unread notification${unread === 1 ? '' : 's'}`}
+        action={
+          <div className="flex items-center gap-2">
+            <button className="btn-secondary flex items-center gap-2" onClick={() => refresh()}>
+              <RefreshCw size={16} /> Refresh
+            </button>
+            <button
+              className="btn-secondary flex items-center gap-2"
+              onClick={() => markAll()}
+              disabled={!unread}
+            >
+              <CheckCheck size={16} /> Mark all as read
+            </button>
+          </div>
+        }
+      />
+
+      {loading && !items.length ? (
+        <div className="card">
+          <LoadingSkeleton />
+        </div>
+      ) : items.length ? (
+        <div className="overflow-hidden rounded-xl border bg-white shadow-card">
+          {items.map((x) => (
+            <NotificationItem key={x._id} notification={x} onMarkRead={markRead} />
+          ))}
+        </div>
+      ) : (
+        <div className="card">
+          <EmptyState
+            icon={<Bell size={40} />}
+            title="You're all caught up"
+            description="New notifications about allocations, bookings and system events will appear here."
+          />
+        </div>
+      )}
+    </>
+  );
+}

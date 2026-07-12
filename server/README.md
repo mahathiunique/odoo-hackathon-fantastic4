@@ -16,6 +16,8 @@ Backend API foundation for the **AssetFlow — Enterprise Asset & Resource Manag
 
 **Stage 8: Shared Resources and Resource Booking — Implemented (this branch)**
 
+**Stage 11: Notifications, Activity Logs and Dashboard APIs — Implemented (this branch)**
+
 The server now supports JWT authentication, session restoration, admin-only user
 management, password hashing, admin seeding, protected Department and Asset
 Category APIs, the Employee directory, the Stage 7 Asset Allocation module, and the
@@ -42,7 +44,103 @@ without the Asset or AssetAllocation models.
 - express-rate-limit
 - nodemon (development)
 
-## Stage 7 Parallel Development
+## Stage 11 — Notifications, Activity Logs and Dashboard APIs
+
+Stage 11 adds persistent in-app **Notifications**, an append-only **Activity Log**,
+and a real, role-aware **Dashboard**.
+
+- Notifications are generated (and de-duplicated) from operational state:
+  overdue allocations, upcoming returns, booking reminders, and immediate
+  confirm/cancel events. Maintenance and Audit notifications are generated through
+  optional adapters that only activate when those stages are merged.
+- Every important Stage 1–8 action records an Activity Log entry. Activity logging
+  never fails the primary operation; failures are logged safely.
+- The Dashboard aggregates live KPIs, charts, recent operational data, and a
+  personalized employee view. It loads fully without Stage 9 or Stage 10.
+
+### Notification delivery model
+
+Notifications are **request-triggered** (no cron, no WebSocket, no email/SMS/push).
+A lightweight refresh runs automatically when the notifications page, the
+notification dropdown, or the dashboard loads; an explicit `POST /api/notifications/refresh`
+endpoint is rate-limited to 10 calls / 5 minutes per user.
+
+### Deduplication
+
+System-generated notifications carry a `deduplicationKey`. A partial unique index
+on `{ recipient, deduplicationKey }` guarantees at most one record per
+recipient + event. Repeated refreshes never create duplicates.
+
+### Stage 9 / Stage 10 integration contract
+
+Stage 11 does **not** import the Maintenance or Audit models. After those branches
+are merged, the Maintenance and Audit modules should:
+
+1. Register their Mongoose models (`MaintenanceRequest`, `AuditCycle`) so the
+   dynamic adapters can find them.
+2. Call the Activity Log service for their state changes:
+
+   ```js
+   const activityService = require("../services/activityService");
+   await activityService.recordActivityFromRequest(req, {
+     action: "Maintenance Request Approved",
+     entityType: "MaintenanceRequest",
+     entityId: maintenanceRequest._id,
+     description: "...",
+     metadata: {},
+   });
+
+   await activityService.recordActivityFromRequest(req, {
+     action: "Audit Cycle Started",
+     entityType: "AuditCycle",
+     entityId: auditCycle._id,
+     description: "...",
+     metadata: {},
+   });
+   ```
+
+3. Optionally emit notifications via the existing `notificationService` using
+   `deduplicationKey` patterns such as `maintenance-status:REQUEST_ID:STATUS` and
+   `audit-assignment:AUDIT_ID` / `audit-deadline:AUDIT_ID:1d`.
+
+No Stage 9 / Stage 10 source files are modified by Stage 11. The
+`integrations/maintenanceNotificationAdapter.js` and
+`integrations/auditNotificationAdapter.js` adapters use dynamic
+`mongoose.model(...)` lookups and return safe empty values when the models are
+absent, so the dashboard and refresh endpoints never error.
+
+### Expected MaintenanceRequest fields (after Stage 9)
+
+```text
+_id
+requestNumber
+asset
+reportedBy
+reportedByEmployee
+priority
+requestStatus   # Submitted | Approved | In Progress | Completed | Rejected | Cancelled
+approvalStatus  # Pending | Approved | Rejected | Not Required
+assignedTechnician
+scheduledDate
+completedDate
+updatedAt
+createdAt
+```
+
+### Expected AuditCycle fields (after Stage 10)
+
+```text
+_id
+auditName
+auditCode
+assignedAuditors
+status           # Planned | In Progress | Completed | Cancelled
+startDate
+endDate
+summary
+createdAt
+updatedAt
+```
 
 Stage 7 was built independently from Stage 6. The Allocation module does not
 define the Asset schema or AssetHistory schema. Instead it uses a dynamic
@@ -162,7 +260,17 @@ server/
 │   └── environment.js       # Centralized env config + validation
 │
 ├── controllers/
-│   └── healthController.js   # Health-check controller
+│   ├── healthController.js   # Health-check controller
+│   ├── notificationController.js
+│   ├── activityController.js
+│   └── dashboardController.js
+│
+├── integrations/
+│   ├── assetAllocationAdapter.js
+│   ├── authIntegration.js
+│   ├── resourceAssetAdapter.js
+│   ├── maintenanceNotificationAdapter.js
+│   └── auditNotificationAdapter.js
 │
 ├── middleware/
 │   ├── errorMiddleware.js    # Centralized error handling
@@ -171,18 +279,29 @@ server/
 │
 ├── routes/
 │   ├── healthRoutes.js       # Health routes
-│   └── index.js              # Route aggregator (future modules mount here)
+│   ├── notificationRoutes.js
+│   ├── activityRoutes.js
+│   ├── dashboardRoutes.js
+│   └── index.js              # Route aggregator
 │
 ├── services/
-│   └── healthService.js      # Health data construction
+│   ├── healthService.js      # Health data construction
+│   ├── notificationService.js
+│   ├── notificationGenerationService.js
+│   ├── activityService.js
+│   ├── dashboardService.js
+│   └── dashboardChartService.js
 │
-├── utils/
-│   ├── ApiError.js           # Custom operational error class
-│   ├── asyncHandler.js       # Async error wrapper
-│   └── response.js           # Standard API response helpers
+├── validators/
+│   └── notificationValidator.js
+│   └── activityValidator.js
 │
-├── models/                   # Reserved for Mongoose schemas (future)
-├── seed/                     # Reserved for seed scripts (future)
+├── models/
+│   ├── Notification.js
+│   └── ActivityLog.js
+│
+├── seed/
+│   ├── seedNotificationsAndActivity.js
 │
 ├── app.js                    # Express app configuration
 ├── server.js                 # Server bootstrap + graceful shutdown
@@ -289,6 +408,13 @@ URL-encoded (for example `#` becomes `%23`).
 | PATCH | `http://localhost:5000/api/bookings/:id/confirm` | Confirm a pending booking |
 | PATCH | `http://localhost:5000/api/bookings/:id/cancel` | Cancel a booking |
 | PATCH | `http://localhost:5000/api/bookings/:id/complete` | Complete a booking |
+| GET | `http://localhost:5000/api/dashboard` | Live dashboard data (all authenticated users) |
+| GET | `http://localhost:5000/api/notifications` | List current user's notifications |
+| GET | `http://localhost:5000/api/notifications/unread-count` | Unread notification count |
+| POST | `http://localhost:5000/api/notifications/refresh` | Generate + dedupe notifications (rate-limited) |
+| PATCH | `http://localhost:5000/api/notifications/read-all` | Mark all as read |
+| PATCH | `http://localhost:5000/api/notifications/:id/read` | Mark one as read |
+| GET | `http://localhost:5000/api/activity` | List activity logs (Admin/Manager/Auditor) |
 
 Allowed frontend origin: `http://localhost:5174`
 
@@ -329,6 +455,12 @@ creates Assets and does not require Stage 6 or Stage 7:
 
 ```bash
 npm run seed:resources
+```
+
+Stage 11 notifications and activity seed (run the Admin seed first):
+
+```bash
+npm run seed:notifications
 ```
 
 ## Stage 8 — Shared Resources and Booking

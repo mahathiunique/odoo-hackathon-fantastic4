@@ -11,6 +11,10 @@ const resourceRoutes = require("./resourceRoutes");
 const bookingRoutes = require("./bookingRoutes");
 const auditRoutes = require("./auditRoutes");
 const maintenanceRoutes = require("./maintenanceRoutes");
+// Stage 11 — Notifications, Activity Logs and Dashboard APIs
+const notificationRoutes = require("./notificationRoutes");
+const activityRoutes = require("./activityRoutes");
+const dashboardRoutes = require("./dashboardRoutes");
 
 const router = express.Router();
 
@@ -30,5 +34,10 @@ router.use("/audits", auditRoutes);
 
 // Stage 9 — Maintenance workflow
 router.use("/maintenance", maintenanceRoutes);
+
+// Stage 11 — Notifications, Activity Logs and Dashboard APIs
+router.use("/notifications", notificationRoutes);
+router.use("/activity", activityRoutes);
+router.use("/dashboard", dashboardRoutes);
 
 module.exports = router;

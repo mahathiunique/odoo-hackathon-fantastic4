@@ -4,6 +4,7 @@ const ResourceBooking = require("../models/ResourceBooking");
 const Employee = require("../models/Employee");
 const ApiError = require("../utils/ApiError");
 const adapter = require("../integrations/resourceAssetAdapter");
+const notificationService = require("./notificationService");
 const {
   escapeRegex,
   paginationFrom,
@@ -21,6 +22,31 @@ const MAX_TX_RETRIES = 3;
 
 const isManager = (user) => MANAGER_ROLES.includes(roleFrom(user));
 const canViewAll = (user) => FULL_VIEW_ROLES.includes(roleFrom(user));
+
+// Fire-and-forget notification helper. Never throws — failures are logged by the
+// notification service and must not break the booking operation.
+const notifyBooking = async (booking, type, priority, title, message) => {
+  try {
+    const resourceLabel = booking.resource?.name || booking.resource?.resourceCode || "your resource";
+    await notificationService.createForRecipients([booking.bookedBy], {
+      type,
+      priority,
+      title,
+      message: message.replace("{resource}", resourceLabel),
+      relatedEntityType: "Booking",
+      relatedEntityId: booking._id,
+      actionUrl: `/bookings/${booking._id}`,
+      deduplicationKey: `booking-event:${booking._id}:${type}`,
+      metadata: {
+        bookingTitle: booking.title,
+        resourceName: resourceLabel,
+        startTime: booking.startTime,
+      },
+    });
+  } catch (error) {
+    console.warn(`[booking:notify] ${type} notification skipped: ${error.message}`);
+  }
+};
 
 // ---------------------------------------------------------------------------
 // Booking-rule helpers
@@ -547,6 +573,14 @@ const confirmBooking = async (id, user) => {
     await booking.save();
   }
 
+  await notifyBooking(
+    booking,
+    "Booking Confirmed",
+    "Normal",
+    "Booking confirmed",
+    "Your booking for {resource} is confirmed."
+  );
+
   return getBookingById(booking._id, user, { bypassAccess: true });
 };
 
@@ -564,11 +598,23 @@ const cancelBooking = async (id, cancelReason, user) => {
     throw new ApiError(400, "Only pending or confirmed bookings can be cancelled");
   }
 
+  const cancelledByOther = String(booking.bookedBy) !== String(userIdFrom(user));
   booking.status = "Cancelled";
   booking.cancelledBy = userIdFrom(user);
   booking.cancelledAt = new Date();
   booking.cancelReason = cancelReason;
   await booking.save();
+
+  // Notify the booking owner when a manager cancels their booking.
+  if (cancelledByOther) {
+    await notifyBooking(
+      booking,
+      "Booking Cancelled",
+      "Normal",
+      "Booking cancelled",
+      "Your booking for {resource} was cancelled by a manager."
+    );
+  }
 
   return getBookingById(booking._id, user, { bypassAccess: true });
 };
