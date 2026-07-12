@@ -4,12 +4,13 @@ Backend API foundation for the **AssetFlow — Enterprise Asset & Resource Manag
 
 ## Development stage
 
-**Stage 2: Backend Foundation and MongoDB Atlas Setup — Completed**
+**Stage 3: Authentication and User Management — Implemented**
 
-This stage delivers a clean, scalable backend foundation only. Feature modules
-(authentication, users, departments, categories, employees, assets, allocations,
-bookings, maintenance, audits, notifications, dashboard queries) are intentionally
-not implemented yet. Only the reusable foundation and MongoDB Atlas connection exist.
+This stage replaces the temporary mock authentication with real backend authentication
+and user-management APIs. The current implementation supports secure login, JWT-based
+session restoration, admin-only user management, password hashing, and admin seeding.
+
+Other modules remain on mock data for now.
 
 ## Technology stack
 
@@ -88,17 +89,21 @@ RATE_LIMIT_WINDOW_MS=900000
 RATE_LIMIT_MAX_REQUESTS=200
 ```
 
-| Variable | Required | Default | Description |
-|---|---|---|---|
-| `MONGODB_URI` | Yes | — | MongoDB Atlas connection string |
-| `PORT` | No | `5000` | Server port |
-| `NODE_ENV` | No | `development` | Environment name |
-| `CLIENT_URL` | No | `http://localhost:5174` | Allowed frontend origin |
-| `API_PREFIX` | No | `/api` | API route prefix |
-| `RATE_LIMIT_WINDOW_MS` | No | `900000` | Rate-limit window (ms) |
-| `RATE_LIMIT_MAX_REQUESTS` | No | `200` | Max requests per window |
+| Variable                  | Required | Default                 | Description                     |
+| ------------------------- | -------- | ----------------------- | ------------------------------- |
+| `MONGODB_URI`             | Yes      | —                       | MongoDB Atlas connection string |
+| `PORT`                    | No       | `5000`                  | Server port                     |
+| `NODE_ENV`                | No       | `development`           | Environment name                |
+| `CLIENT_URL`              | No       | `http://localhost:5174` | Allowed frontend origin         |
+| `API_PREFIX`              | No       | `/api`                  | API route prefix                |
+| `RATE_LIMIT_WINDOW_MS`    | No       | `900000`                | Rate-limit window (ms)          |
+| `RATE_LIMIT_MAX_REQUESTS` | No       | `200`                   | Max requests per window         |
 
 Never commit `.env`. The `.env.example` file is safe to commit.
+
+Default demo admin credentials are included in `.env.example` for local development only.
+For production, change them and consider using secure HTTP-only cookies instead of
+local storage for JWTs.
 
 ## MongoDB Atlas setup
 
@@ -118,10 +123,14 @@ URL-encoded (for example `#` becomes `%23`).
 
 ## Available endpoints
 
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `http://localhost:5000/` | API root information |
-| GET | `http://localhost:5000/api/health` | Backend health check |
+| Method | Endpoint                                | Description                             |
+| ------ | --------------------------------------- | --------------------------------------- |
+| GET    | `http://localhost:5000/`                | API root information                    |
+| GET    | `http://localhost:5000/api/health`      | Backend health check                    |
+| POST   | `http://localhost:5000/api/auth/login`  | Authenticate a user and receive a JWT   |
+| GET    | `http://localhost:5000/api/auth/me`     | Retrieve the current authenticated user |
+| POST   | `http://localhost:5000/api/auth/logout` | End the session on the client           |
+| GET    | `http://localhost:5000/api/users`       | List users (admin only)                 |
 
 Allowed frontend origin: `http://localhost:5174`
 

@@ -1,6 +1,6 @@
 require("dotenv").config();
 
-const requiredVars = ["MONGODB_URI"];
+const requiredVars = ["MONGODB_URI", "JWT_SECRET"];
 
 requiredVars.forEach((key) => {
   if (!process.env[key]) {
@@ -28,6 +28,9 @@ const nodeEnv = process.env.NODE_ENV || "development";
 const mongoUri = process.env.MONGODB_URI;
 const clientUrl = process.env.CLIENT_URL || "http://localhost:5174";
 const apiPrefix = process.env.API_PREFIX || "/api";
+const jwtSecret = process.env.JWT_SECRET || "assetflow-dev-secret";
+const jwtExpiresIn = process.env.JWT_EXPIRES_IN || "7d";
+const bcryptSaltRounds = process.env.BCRYPT_SALT_ROUNDS || "12";
 const rateLimitWindowMs = parseInteger(
   process.env.RATE_LIMIT_WINDOW_MS,
   900000,
@@ -47,6 +50,9 @@ module.exports = {
   mongoUri,
   clientUrl,
   apiPrefix,
+  jwtSecret,
+  jwtExpiresIn,
+  bcryptSaltRounds,
   rateLimitWindowMs,
   rateLimitMaxRequests,
 };

@@ -1,3 +1,22 @@
-import {users} from '../mock/data'; import {delay} from './store';
-// Temporary mock authentication. Server-side identity and authorization replace this in a later phase.
-export const authService={async login(email,password){await delay(500);const user=users.find(u=>u.email.toLowerCase()===email.toLowerCase()&&u.password===password);if(!user)throw new Error('Email or password is incorrect');const {password:_,...safe}=user;return{success:true,data:safe}},logout(){localStorage.removeItem('assetflow_user')}};
+import api from './api';
+
+export const authService = {
+  async login(email, password) {
+    const response = await api.post('/auth/login', { email, password });
+    return response.data;
+  },
+  async getCurrentUser() {
+    const response = await api.get('/auth/me');
+    return response.data;
+  },
+  async logout() {
+    try {
+      await api.post('/auth/logout');
+    } catch (error) {
+      // Ignore logout API failures and still clear local auth state.
+    } finally {
+      localStorage.removeItem('assetflow_token');
+      localStorage.removeItem('assetflow_user');
+    }
+  },
+};
