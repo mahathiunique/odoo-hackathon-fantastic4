@@ -69,7 +69,7 @@ export default function AllocationListPage({mine}){
     {key:'allocatedTo',label:'Allocated to',render:(_,row)=><AllocationTargetDisplay allocation={row}/>},
     {key:'allocatedToType',label:'Target type',render:v=>v||'—'},
     {key:'allocatedDate',label:'Allocated',render:v=>v?new Date(v).toLocaleDateString():'—'},
-    {key:'expectedReturnDate',label:'Expected return',render:v=>v?<span className={row.status==='Overdue'?'text-red-600 font-medium':''}>{new Date(v).toLocaleDateString()}</span>:'—'},
+    {key:'expectedReturnDate',label:'Expected return',render:(v,row)=>v?<span className={row.status==='Overdue'?'text-red-600 font-medium':''}>{new Date(v).toLocaleDateString()}</span>:'—'},
     {key:'actualReturnDate',label:'Actual return',render:v=>v?new Date(v).toLocaleDateString():'—'},
     {key:'status',label:'Status',render:v=><AllocationStatusBadge status={v}/>},
     {key:'allocatedBy',label:'Allocated by',render:v=>v?.name||'—'},
