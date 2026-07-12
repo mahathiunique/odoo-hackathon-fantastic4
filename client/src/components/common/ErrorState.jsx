@@ -1,0 +1,1 @@
+import {CircleAlert} from 'lucide-react';export default function ErrorState({retry}){return <div className="card py-12 text-center"><CircleAlert className="mx-auto text-red-500"/><p className="mt-3 font-medium">We couldn't load this information.</p>{retry&&<button onClick={retry} className="btn-secondary mt-4">Try again</button>}</div>}

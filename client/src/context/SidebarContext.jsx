@@ -1,0 +1,1 @@
+import {createContext,useContext,useState} from 'react';const C=createContext();export const SidebarProvider=({children})=>{const [collapsed,setCollapsed]=useState(false);return <C.Provider value={{collapsed,setCollapsed}}>{children}</C.Provider>};export const useSidebar=()=>useContext(C);

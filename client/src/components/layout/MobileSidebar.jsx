@@ -1,0 +1,1 @@
+import Sidebar from './Sidebar';export default function MobileSidebar({open,onClose}){if(!open)return null;return <div className="fixed inset-0 z-40 bg-slate-950/50 lg:hidden" onMouseDown={e=>e.target===e.currentTarget&&onClose()}><Sidebar mobile onClose={onClose}/></div>}

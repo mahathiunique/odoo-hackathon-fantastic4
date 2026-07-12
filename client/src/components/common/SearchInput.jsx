@@ -1,0 +1,1 @@
+import {Search} from 'lucide-react';export default function SearchInput(props){return <div className="relative min-w-52 flex-1"><Search className="absolute left-3 top-2.5 text-slate-400" size={18}/><input className="field pl-10" placeholder="Search records…" {...props}/></div>}

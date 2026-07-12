@@ -1,0 +1,1 @@
+export { canAccess } from './constants';

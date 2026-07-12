@@ -1,0 +1,1 @@
+import FormError from './FormError';export default function Input({label,error,required,...props}){return <label className="block"><span className="label">{label}{required&&<span className="text-red-500"> *</span>}</span><input className={`field ${error?'border-red-400':''}`} {...props}/><FormError error={error}/></label>}

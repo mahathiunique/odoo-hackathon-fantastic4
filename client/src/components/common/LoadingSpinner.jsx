@@ -1,0 +1,1 @@
+import {LoaderCircle} from 'lucide-react';export default function LoadingSpinner(){return <div className="grid min-h-48 place-items-center"><LoaderCircle className="animate-spin text-primary-600"/></div>}

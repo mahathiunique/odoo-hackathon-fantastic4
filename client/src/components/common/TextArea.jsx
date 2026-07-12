@@ -1,0 +1,1 @@
+import FormError from './FormError';export default function TextArea({label,error,required,...props}){return <label className="block"><span className="label">{label}{required&&<span className="text-red-500"> *</span>}</span><textarea className="field min-h-24 resize-y" {...props}/><FormError error={error}/></label>}

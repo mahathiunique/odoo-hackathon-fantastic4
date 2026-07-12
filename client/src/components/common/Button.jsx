@@ -1,0 +1,1 @@
+import {LoaderCircle} from 'lucide-react';export default function Button({children,variant='primary',loading=false,className='',...props}){return <button className={`btn-${variant} ${className}`} disabled={loading||props.disabled} {...props}>{loading&&<LoaderCircle size={16} className="animate-spin"/>}{children}</button>}
