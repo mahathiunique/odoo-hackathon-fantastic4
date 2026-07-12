@@ -4,11 +4,13 @@ const Department = require("../models/Department");
 const User = require("../models/User");
 const ApiError = require("../utils/ApiError");
 
+const escapeRegex = (value) => String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 const buildQuery = (filters = {}) => {
   const query = {};
 
   if (filters.search) {
-    const regex = new RegExp(filters.search, "i");
+    const regex = new RegExp(escapeRegex(filters.search), "i");
     query.$or = [
       { employeeId: regex },
       { name: regex },
@@ -27,7 +29,7 @@ const buildQuery = (filters = {}) => {
   }
 
   if (filters.designation) {
-    query.designation = new RegExp(`^${filters.designation.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i");
+    query.designation = new RegExp(`^${escapeRegex(filters.designation)}$`, "i");
   }
 
   return query;
@@ -72,7 +74,7 @@ const getEmployees = async (filters = {}) => {
     const { password, ...safeUser } = emp.userAccount || {};
     return {
       ...emp,
-      userAccount: safeUser || null,
+      userAccount: emp.userAccount ? safeUser : null,
       activeAssetCount: 0,
       bookingCount: 0,
     };
@@ -112,7 +114,7 @@ const getMyProfile = async (userId) => {
   const { password, ...safeUser } = employee.userAccount || {};
   return {
     ...employee,
-    userAccount: safeUser || null,
+    userAccount: employee.userAccount ? safeUser : null,
     activeAssetCount: 0,
     allocationHistoryCount: 0,
     upcomingBookingCount: 0,
@@ -143,7 +145,7 @@ const getEmployeeById = async (id) => {
   const { password, ...safeUser } = employee.userAccount || {};
   return {
     ...employee,
-    userAccount: safeUser || null,
+    userAccount: employee.userAccount ? safeUser : null,
     activeAssetCount: 0,
     allocationHistory: [],
     upcomingBookings: [],

@@ -18,7 +18,7 @@ const getEmployees = async (req, res) => {
 
   const userRole = req.user?.role;
   let effectiveStatus = status;
-  if ((userRole === "Maintenance Manager" || userRole === "Auditor") && !status) {
+  if (userRole === "Maintenance Manager" || userRole === "Auditor") {
     effectiveStatus = "Active";
   }
 

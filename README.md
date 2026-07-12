@@ -12,8 +12,13 @@ Stage 4: Departments and asset categories — Completed
 Stage 5: Employee directory — Completed
 Stage 6: Asset management and lifecycle — In progress on separate branch
 Stage 7: Asset allocation and returns — In progress on separate branch
-Stage 8: Shared resources and booking — Pending
+Stage 8: Shared resources and booking — In progress on separate branch
+Stage 9: Maintenance workflow — Pending
 ```
+
+Stage 8 operates independently using standalone shared resources. Resources and
+bookings do not require the Stage 6 Asset module; a resource may optionally be
+linked to an Asset only after Stage 6 is merged (see `server/README.md`).
 
 ## URLs
 
@@ -70,7 +75,11 @@ Then open `http://localhost:5000/api/health`.
 ```bash
 npm run seed:admin
 npm run seed:organization
+npm run seed:resources
 ```
+
+`npm run seed:resources` seeds Stage 8 shared resources and a few non-overlapping
+sample bookings. It never creates Assets and does not require Stage 6 or Stage 7.
 
 ## MongoDB Atlas
 
