@@ -194,24 +194,6 @@ Fueled by aggregate live queries against MongoDB Atlas:
 
 ---
 
-## 🔄 Complete System Workflow
-
-$$\text{Organization Setup} \longrightarrow \text{Create Departments \& Categories} \longrightarrow \text{Register Employees \& Users}$$
-
-$$\downarrow}$$
-
-$$\text{Register Assets} \longrightarrow \text{Allocate Assets OR Configure Shared Resources} \longrightarrow \text{Track Returns \& Resource Bookings}$$
-
-$$\downarrow}$$
-
-$$\text{Handle Maintenance Requests} \longrightarrow \text{Conduct Physical Audits} \longrightarrow \text{Generate Notifications \& Activity Logs}$$
-
-$$\downarrow}$$
-
-$$\text{Monitor Everything Through the Dashboard}$$
-
----
-
 ## 👥 User Roles Matrix
 
 ### 🛠️ Admin
