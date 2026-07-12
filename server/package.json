@@ -13,7 +13,9 @@
     "seed:allocations": "node seed/seedAllocations.js",
     "seed:resources": "node seed/seedResourcesAndBookings.js",
     "seed:audits": "node seed/seedAudits.js",
-    "seed:notifications": "node seed/seedNotificationsAndActivity.js"
+    "seed:notifications": "node seed/seedNotificationsAndActivity.js",
+    "seed:employees": "node seed/seedEmployees.js",
+    "seed:stage11": "node seed/seedStage11.js"
   },
   "keywords": [
     "assetflow",
