@@ -5,6 +5,3 @@ node_modules/
 dist/
 coverage/
 .DS_Store
-
-# Keep environment examples
-!.env.example

@@ -2,53 +2,66 @@
 
 **Enterprise Asset & Resource Management System** — a responsive ERP-style workspace that helps organizations understand what they own, where it is, who holds it, and what operational action is due next.
 
-## Current phase
+## Development roadmap
 
-This repository contains the complete frontend prototype and a backend placeholder only. It includes mock authentication, role-aware routes, dashboard analytics, organization directories, asset lifecycle records, allocations, shared-resource bookings, maintenance workflows, audits, notifications, user administration, and profiles. Data is served through asynchronous mock services and persisted to browser `localStorage` after changes.
+```text
+Stage 1: Frontend and mock data — Completed
+Stage 2: Backend foundation and MongoDB Atlas — Completed
+Stage 3: Authentication and user management — Pending
+```
 
-No Express APIs, database models, JWT handling, password hashing, or MongoDB connection are included. MongoDB Atlas is a future integration.
+## URLs
+
+```text
+Frontend:    http://localhost:5174
+Backend:     http://localhost:5000
+Health check: http://localhost:5000/api/health
+```
+
+The frontend still uses mock data during Stage 2 (`VITE_USE_MOCK_DATA=true`).
 
 ## Technology
 
-React, Vite, JavaScript, Tailwind CSS, React Router, React Hook Form, Axios, Lucide, Recharts, React Hot Toast, and date-fns.
+- Frontend: React, Vite, JavaScript, Tailwind CSS, React Router, React Hook Form, Axios, Lucide, Recharts, React Hot Toast, and date-fns.
+- Backend: Node.js, Express, MongoDB Atlas, Mongoose, dotenv, cors, helmet, morgan, express-rate-limit.
 
-## Structure
+## Frontend (Stage 1)
 
-```text
-.
-├── client/
-│   ├── public/assets/
-│   ├── src/
-│   │   ├── components/    # common, layout, tables, auth, notifications
-│   │   ├── context/       # authentication, notifications, sidebar
-│   │   ├── hooks/
-│   │   ├── mock/          # relational demonstration records
-│   │   ├── pages/         # route screens and reusable module screens
-│   │   ├── routes/
-│   │   ├── services/      # future-API-shaped async mock layer
-│   │   └── utils/
-│   └── package.json
-└── server/                # placeholders for later backend phases
-```
+The frontend prototype includes mock authentication, role-aware routes, dashboard analytics, organization directories, asset lifecycle records, allocations, shared-resource bookings, maintenance workflows, audits, notifications, user administration, and profiles. Data is served through asynchronous mock services and persisted to browser `localStorage` after changes.
 
-## Run locally
-
-From the repository root:
+### Run the frontend
 
 ```bash
+cd client
 npm install
 npm run dev
 ```
 
-You can also run the same commands directly inside `client/`.
-
 The development server uses `http://localhost:5174` by default.
 
-Create a production bundle with `npm run build`.
+## Backend (Stage 2)
 
-Copy `.env.example` to `.env` if you want to customize the future API URL. Mock mode is enabled by design in this phase.
+The backend is now an Express + MongoDB Atlas foundation. It provides a health-check
+endpoint, centralized responses, centralized error handling, request logging, rate
+limiting, CORS for the frontend, and graceful shutdown. No feature modules or
+authentication are implemented yet.
 
-## Demo credentials
+### Run the backend
+
+```bash
+cd server
+npm install
+npm run dev
+```
+
+Then open `http://localhost:5000/api/health`.
+
+## MongoDB Atlas
+
+The backend connects to MongoDB Atlas using `MONGODB_URI` from `server/.env`.
+See `server/README.md` for full setup instructions. The `.env` file is never committed.
+
+## Demo credentials (frontend only)
 
 | Role | Email | Password |
 |---|---|---|
@@ -60,11 +73,9 @@ Copy `.env.example` to `.env` if you want to customize the future API URL. Mock 
 
 The login screen also provides one-click account filling. These credentials are intentionally frontend-only and must never be used as a production authentication design.
 
-## Known frontend limitations
+## Known limitations
 
-- Data belongs to the current browser; there is no cross-device synchronization.
+- Data belongs to the current browser; there is no cross-device synchronization yet.
 - Frontend role guards improve the demo experience but are not security boundaries.
 - Concurrent booking and double-allocation checks will ultimately require authoritative backend transactions.
 - Password reset/change and persistent file uploads are deferred to the backend phase.
-
-The backend will be added module by module in later development phases, beginning with Express and MongoDB Atlas, followed by authentication, core directories, assets, allocations, bookings, maintenance, audits, notifications, and dashboard APIs.
