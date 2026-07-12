@@ -10,6 +10,7 @@ import ModuleFormPage from '../pages/ModuleFormPage';
 import ModuleDetailsPage from '../pages/ModuleDetailsPage';
 import NotificationsPage from '../pages/notifications/NotificationsPage';
 import ProfilePage from '../pages/profile/ProfilePage';
+import ActivityLogPage from '../pages/activity/ActivityLogPage';
 import UnauthorizedPage from '../pages/UnauthorizedPage';
 import NotFoundPage from '../pages/NotFoundPage';
 import StatusBadge from '../components/common/StatusBadge';
@@ -130,6 +131,7 @@ export default function AppRoutes(){
         <Route path="my-bookings" element={<RoleGuard allowedRoles={ALL_ROLES}><MyBookingsPage/></RoleGuard>}/>
 
         <Route path="notifications" element={<RoleGuard><NotificationsPage/></RoleGuard>}/>
+        <Route path="activity" element={<RoleGuard allowedRoles={['Admin','Asset Manager','Maintenance Manager','Auditor']}><ActivityLogPage/></RoleGuard>}/>
         <Route path="profile" element={<RoleGuard><ProfilePage/></RoleGuard>}/>
       </Route>
       <Route path="*" element={<NotFoundPage/>}/>

@@ -3,6 +3,7 @@ const ApiError = require("../utils/ApiError");
 const { authMiddleware, authorize } = require("../middleware/auth");
 const { validateBody } = require("../validators/employeeValidator");
 const employeeService = require("../services/employeeService");
+const activityService = require("../services/activityService");
 
 const getEmployees = async (req, res) => {
   const {
@@ -87,6 +88,7 @@ const createEmployee = async (req, res) => {
   }
 
   const employee = await employeeService.createEmployee(payload, req.user._id);
+  activityService.recordActivityFromRequest(req, { action: "Employee Created", entityType: "Employee", entityId: employee._id, description: `Created employee ${employee.name} (${employee.employeeId})`, metadata: { employeeId: employee.employeeId, department: employee.department } });
   return sendSuccess(res, "Employee created successfully", employee, 201);
 };
 
@@ -122,6 +124,7 @@ const updateEmployee = async (req, res) => {
   }
 
   const employee = await employeeService.updateEmployee(id, payload, req.user._id);
+  activityService.recordActivityFromRequest(req, { action: "Employee Updated", entityType: "Employee", entityId: employee._id, description: `Updated employee ${employee.name} (${employee.employeeId})`, metadata: { employeeId: employee.employeeId } });
   return sendSuccess(res, "Employee updated successfully", employee);
 };
 
@@ -129,6 +132,8 @@ const changeEmployeeStatus = async (req, res) => {
   const { status } = req.body;
   const result = await employeeService.changeStatus(req.params.id, status, req.user._id);
   const message = status === "Active" ? "Employee activated successfully" : "Employee deactivated successfully";
+  const employee = result.employee || result;
+  activityService.recordActivityFromRequest(req, { action: "Employee Status Changed", entityType: "Employee", entityId: req.params.id, description: `Employee ${employee.name || ""} set to ${status}`, metadata: { status } });
   return sendSuccess(res, message, result);
 };
 
@@ -136,11 +141,13 @@ const linkUserAccount = async (req, res) => {
   const { userAccount } = req.body;
   const result = await employeeService.linkUserAccount(req.params.id, userAccount, req.user._id);
   const message = userAccount ? "User account linked successfully" : "User account unlinked successfully";
+  activityService.recordActivityFromRequest(req, { action: userAccount ? "Employee User Linked" : "Employee User Unlinked", entityType: "Employee", entityId: req.params.id, description: message, metadata: { userAccount: userAccount || null } });
   return sendSuccess(res, message, result);
 };
 
 const deactivateEmployee = async (req, res) => {
   const result = await employeeService.deactivateEmployee(req.params.id, req.user._id);
+  activityService.recordActivityFromRequest(req, { action: "Employee Status Changed", entityType: "Employee", entityId: req.params.id, description: "Employee deactivated", metadata: { status: "Inactive" } });
   return sendSuccess(res, "Employee deactivated successfully", result);
 };
 

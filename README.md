@@ -15,6 +15,12 @@ Stage 7: Asset allocation and returns — Completed
 Stage 8: Shared resources and booking — Completed
 Stage 9: Maintenance workflow — In progress on separate branch
 Stage 10: Audit cycle and discrepancies — Completed on this branch
+Stage 6: Asset management and lifecycle — In progress on separate branch
+Stage 7: Asset allocation and returns — In progress on separate branch
+Stage 8: Shared resources and booking — Completed
+Stage 9: Maintenance request and approval workflow — In progress on separate branch
+Stage 10: Audit cycle and discrepancy management — In progress on separate branch
+Stage 11: Notifications, activity logs and dashboard APIs — Completed
 ```
 
 Stage 8 operates independently using standalone shared resources. Resources and
@@ -38,9 +44,11 @@ Departments and categories use real APIs. Other feature modules continue using m
 
 ## Frontend
 
-The frontend uses real JWT authentication, user-management, Department, and Asset
-Category APIs. Later business modules continue using mock services and browser
-`localStorage` until their backend stages are implemented.
+The frontend uses real JWT authentication, user-management, Department, Asset
+Category, Notification, Activity Log and Dashboard APIs. Later business modules
+(assets, allocations, resources, bookings, maintenance, audits) continue using
+mock services and browser `localStorage` until their backend stages are
+implemented.
 
 ### Run the frontend
 
@@ -77,6 +85,7 @@ Then open `http://localhost:5000/api/health`.
 npm run seed:admin
 npm run seed:organization
 npm run seed:resources
+npm run seed:notifications
 ```
 
 `npm run seed:resources` seeds Stage 8 shared resources and a few non-overlapping
@@ -89,13 +98,13 @@ See `server/README.md` for full setup instructions. The `.env` file is never com
 
 ## Demo credentials
 
-| Role | Email | Password |
-|---|---|---|
-| Admin | admin@assetflow.com | Admin@123 |
-| Asset Manager | assets@assetflow.com | Asset@123 |
+| Role                | Email                     | Password        |
+| ------------------- | ------------------------- | --------------- |
+| Admin               | admin@assetflow.com       | Admin@123       |
+| Asset Manager       | assets@assetflow.com      | Asset@123       |
 | Maintenance Manager | maintenance@assetflow.com | Maintenance@123 |
-| Auditor | auditor@assetflow.com | Auditor@123 |
-| Employee | employee@assetflow.com | Employee@123 |
+| Auditor             | auditor@assetflow.com     | Auditor@123     |
+| Employee            | employee@assetflow.com    | Employee@123    |
 
 The seeded Admin credentials come from `server/.env`. Change all demonstration
 credentials before using the application outside local development.

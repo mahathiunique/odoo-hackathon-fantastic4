@@ -17,7 +17,34 @@ const populate = (query) => {
   return query.populate("employee", "employeeId name email designation status").populate("department", "name code status").populate("allocatedBy returnedBy", "name email role");
 };
 
-const refreshOverdueAllocations = () => AssetAllocation.updateMany({ isOpen: true, status: "Active", expectedReturnDate: { $lt: new Date() } }, { $set: { status: "Overdue" } });
+const activityService = require("../services/activityService");
+
+const refreshOverdueAllocations = async () => {
+  const now = new Date();
+  const newlyOverdue = await AssetAllocation.find({
+    isOpen: true,
+    status: "Active",
+    expectedReturnDate: { $lt: now },
+  })
+    .populate("asset", "assetTag name")
+    .lean();
+  if (newlyOverdue.length) {
+    await AssetAllocation.updateMany(
+      { _id: { $in: newlyOverdue.map((a) => a._id) } },
+      { $set: { status: "Overdue" } }
+    );
+    newlyOverdue.forEach((allocation) => {
+      activityService.recordActivity({
+        action: "Allocation Marked Overdue",
+        entityType: "AssetAllocation",
+        entityId: allocation._id,
+        description: `Allocation ${allocation.asset?.assetTag || ""} marked overdue`,
+        metadata: { assetTag: allocation.asset?.assetTag, expectedReturnDate: allocation.expectedReturnDate },
+      });
+    });
+  }
+  return newlyOverdue.length;
+};
 
 const validateTarget = async (payload, session) => {
   if (payload.allocatedToType === "Employee") {
