@@ -4,13 +4,16 @@ Backend API foundation for the **AssetFlow — Enterprise Asset & Resource Manag
 
 ## Development stage
 
+**Stage 2: Backend Foundation — Completed**
+
 **Stage 3: Authentication and User Management — Implemented**
 
-This stage replaces the temporary mock authentication with real backend authentication
-and user-management APIs. The current implementation supports secure login, JWT-based
-session restoration, admin-only user management, password hashing, and admin seeding.
+**Stage 4: Departments and Asset Categories — Implemented**
 
-Other modules remain on mock data for now.
+The server now supports JWT authentication, session restoration, admin-only user
+management, password hashing, admin seeding, and protected Department and Asset
+Category APIs. Employees, assets, allocations, bookings, maintenance, audits,
+notifications, and dashboard APIs remain outside the current backend stages.
 
 ## Technology stack
 
@@ -123,14 +126,22 @@ URL-encoded (for example `#` becomes `%23`).
 
 ## Available endpoints
 
-| Method | Endpoint                                | Description                             |
-| ------ | --------------------------------------- | --------------------------------------- |
-| GET    | `http://localhost:5000/`                | API root information                    |
-| GET    | `http://localhost:5000/api/health`      | Backend health check                    |
-| POST   | `http://localhost:5000/api/auth/login`  | Authenticate a user and receive a JWT   |
-| GET    | `http://localhost:5000/api/auth/me`     | Retrieve the current authenticated user |
-| POST   | `http://localhost:5000/api/auth/logout` | End the session on the client           |
-| GET    | `http://localhost:5000/api/users`       | List users (admin only)                 |
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `http://localhost:5000/` | API root information |
+| GET | `http://localhost:5000/api/health` | Backend health check |
+| POST | `http://localhost:5000/api/auth/login` | Authenticate a user and receive a JWT |
+| GET | `http://localhost:5000/api/auth/me` | Retrieve the current authenticated user |
+| POST | `http://localhost:5000/api/auth/logout` | End the client session |
+| GET | `http://localhost:5000/api/users` | List users (Admin only) |
+| GET/POST | `http://localhost:5000/api/departments` | List or create departments |
+| GET | `http://localhost:5000/api/departments/options` | Active department options |
+| GET/PUT | `http://localhost:5000/api/departments/:id` | Read or update a department |
+| PATCH | `http://localhost:5000/api/departments/:id/status` | Change department status |
+| GET/POST | `http://localhost:5000/api/categories` | List or create categories |
+| GET | `http://localhost:5000/api/categories/options` | Active category options |
+| GET/PUT | `http://localhost:5000/api/categories/:id` | Read or update a category |
+| PATCH | `http://localhost:5000/api/categories/:id/status` | Change category status |
 
 Allowed frontend origin: `http://localhost:5174`
 
@@ -152,6 +163,18 @@ Syntax check:
 
 ```bash
 npm run check
+```
+
+Stage 4 unit tests:
+
+```bash
+npm test
+```
+
+Organization seed (run the Admin seed first):
+
+```bash
+npm run seed:organization
 ```
 
 ## Testing instructions

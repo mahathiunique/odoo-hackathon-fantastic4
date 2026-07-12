@@ -18,13 +18,12 @@ const errorMiddleware = (err, req, res, next) => {
     recognized = true;
     statusCode = 400;
     message = "Validation failed";
-    errors = Object.values(err.errors).map((e) => e.message);
+    errors = Object.values(err.errors).map((e) => ({ field: e.path, message: e.message }));
   } else if (err.name === "MongoServerError" && err.code === 11000) {
     recognized = true;
     statusCode = 409;
-    message = "Conflict: the resource already exists";
-    errors = [];
-    console.error(`MongoDB duplicate key error: ${err.message}`);
+    message = "A record with this value already exists";
+    errors = Object.keys(err.keyPattern || {}).map((field) => ({ field, message: `${field} must be unique` }));
   } else if (err.name === "CastError") {
     recognized = true;
     statusCode = 400;

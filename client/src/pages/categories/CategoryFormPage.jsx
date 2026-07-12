@@ -1,0 +1,1 @@
+import OrganizationFormPage from '../OrganizationFormPage';import categoryService from '../../services/categoryService';export default function CategoryFormPage(){return <OrganizationFormPage kind="category" service={categoryService}/>}

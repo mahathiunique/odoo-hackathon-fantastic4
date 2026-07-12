@@ -1,0 +1,1 @@
+import OrganizationListPage from '../OrganizationListPage';import categoryService from '../../services/categoryService';export default function CategoryListPage(){return <OrganizationListPage kind="category" service={categoryService}/>}

@@ -7,7 +7,8 @@
 ```text
 Stage 1: Frontend and mock data — Completed
 Stage 2: Backend foundation and MongoDB Atlas — Completed
-Stage 3: Authentication and user management — Pending
+Stage 3: Authentication and user management — Completed
+Stage 4: Departments and asset categories — Completed
 ```
 
 ## URLs
@@ -18,16 +19,18 @@ Backend:     http://localhost:5000
 Health check: http://localhost:5000/api/health
 ```
 
-The frontend still uses mock data during Stage 2 (`VITE_USE_MOCK_DATA=true`).
+Departments and categories use real APIs. Other feature modules continue using mock data until their backend stages.
 
 ## Technology
 
 - Frontend: React, Vite, JavaScript, Tailwind CSS, React Router, React Hook Form, Axios, Lucide, Recharts, React Hot Toast, and date-fns.
 - Backend: Node.js, Express, MongoDB Atlas, Mongoose, dotenv, cors, helmet, morgan, express-rate-limit.
 
-## Frontend (Stage 1)
+## Frontend
 
-The frontend prototype includes mock authentication, role-aware routes, dashboard analytics, organization directories, asset lifecycle records, allocations, shared-resource bookings, maintenance workflows, audits, notifications, user administration, and profiles. Data is served through asynchronous mock services and persisted to browser `localStorage` after changes.
+The frontend uses real JWT authentication, user-management, Department, and Asset
+Category APIs. Later business modules continue using mock services and browser
+`localStorage` until their backend stages are implemented.
 
 ### Run the frontend
 
@@ -39,12 +42,14 @@ npm run dev
 
 The development server uses `http://localhost:5174` by default.
 
-## Backend (Stage 2)
+## Backend (Stages 2–4)
 
 The backend is now an Express + MongoDB Atlas foundation. It provides a health-check
 endpoint, centralized responses, centralized error handling, request logging, rate
-limiting, CORS for the frontend, and graceful shutdown. No feature modules or
-authentication are implemented yet.
+limiting, CORS for the frontend, and graceful shutdown. It also provides JWT
+authentication, user management, Department and Asset Category models, validation,
+protected CRUD routes, server-side search, filters, sorting, pagination, options
+endpoints, and soft deactivation.
 
 ### Run the backend
 
@@ -56,12 +61,19 @@ npm run dev
 
 Then open `http://localhost:5000/api/health`.
 
+### Seed initial data
+
+```bash
+npm run seed:admin
+npm run seed:organization
+```
+
 ## MongoDB Atlas
 
 The backend connects to MongoDB Atlas using `MONGODB_URI` from `server/.env`.
 See `server/README.md` for full setup instructions. The `.env` file is never committed.
 
-## Demo credentials (frontend only)
+## Demo credentials
 
 | Role | Email | Password |
 |---|---|---|
@@ -71,11 +83,12 @@ See `server/README.md` for full setup instructions. The `.env` file is never com
 | Auditor | auditor@assetflow.com | Auditor@123 |
 | Employee | employee@assetflow.com | Employee@123 |
 
-The login screen also provides one-click account filling. These credentials are intentionally frontend-only and must never be used as a production authentication design.
+The seeded Admin credentials come from `server/.env`. Change all demonstration
+credentials before using the application outside local development.
 
 ## Known limitations
 
-- Data belongs to the current browser; there is no cross-device synchronization yet.
-- Frontend role guards improve the demo experience but are not security boundaries.
+- Modules after Stage 4 still belong to the current browser; they do not synchronize across devices.
+- Backend middleware is the authorization boundary; frontend role guards only control visibility.
 - Concurrent booking and double-allocation checks will ultimately require authoritative backend transactions.
-- Password reset/change and persistent file uploads are deferred to the backend phase.
+- Self-service password changes and persistent file uploads remain deferred.
